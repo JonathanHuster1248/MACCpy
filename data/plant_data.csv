@@ -1,5 +1,5 @@
 "# Units: NA, MW, NA, Year, NA, kwh, mmbtu, (metric) tonne CO2, ",,,,,,,
-name,capacity_mw,primary_fuel,commissioning_year,state,generation,fuel_consumption,emissions
+name,capacity,primary_fuel,commissioning_year,state,generation,fuel_consumption,emissions
 1515 s caron road,4.2,Gas,2000,IL,24000,394,20.90976969
 191 peachtree tower,2.4,Oil,1991,GA,0,28,2.048498584
 491 e 48th street,161.7,Gas,1996.131107,MI,21103000,262600,13936.30843
