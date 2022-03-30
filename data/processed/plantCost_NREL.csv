@@ -1,0 +1,15 @@
+### This data is primarily pulled from https://data.openei.org/s3_viewer?bucket=oedi-data-lake&prefix=ATB%2Felectricity%2Fcsv%2F2021%2F,,,,,,
+"### This data has values for both CT and CC gas plants, but we'll just use CC plants. For scenarios that change values, we choose moderate and Utility scale",,,,,,
+### Values for all heatrates and for costs from waste and oil pulled from 2020 AEO as are fuel prices,,,,,,
+primary_fuel,capital_cost_per_kw,fixed_om_per_kw_year,variable_om_per_mwh,heat_rate_btu_per_kwh,discount_rate,fuel_price_per_btu
+Coal,3102.48,71.8,7.86,10551,0.06,0.000003211
+Gas,1043.83,27.3,1.74,7732,0.06,0.000001935
+Oil,1810,35.16,5.69,11135,0.06,0.0000124
+Solar,1677.33,17.85,0,3412,0.06,0
+Wind,1347.64,42.26,0,3412,0.06,0
+Waste,1563,20.1,6.2,8513,0.06,0
+Hydro,2528.25,63.26,0,3412,0.06,0
+Geothermal,6439.4,136.11,0,3412,0.06,0
+CSP,6307,65.61,3.5,3412,0.06,0
+Nuclear,7279.13,144.97,2.35,10608,0.06,0
+Biomass,4319.38,149.834,4.79,13300,0.06,0

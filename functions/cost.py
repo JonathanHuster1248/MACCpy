@@ -1,34 +1,27 @@
 
-# var_om_cost function to return the variable operation and maintainance costs of fuel (fuel) and generation (gen)
-# var_om: float representing the cost ($) per unit generation (mwh)
-# gen: float representing the generation (mwh)
-def var_om_cost(var_om, gen):
-    return var_om*gen
+import numpy
+import pandas
+import constants
 
-# fix_om_cost function to return the fixed operation and maintainance costs of capacity (cap)
-# fix_om: float representing the cost ($) per unit capacity (mw)
-# cap: float representing the capacity (mw)
-def fix_om_cost(fix_om, cap):
-    return fix_om*cap
+def fuel_demand(heat_rate, gen):
+    """
+    Calculating the fuel demand for a plant with heat rate heat_rate to generate
+    gen amounts of energy. 
 
-# fuel_cost function to return the fuel costs of fuel_demand amount of fuel
-# fuel_price: float representing the cost ($) per unit energy (mmbtu)
-# fuel_dem: float representing the fuel demand (mmbtu)
-def fuel_cost(fuel_price, fuel_dem):
-    return fuel_price*fuel_dem
+    Parameters
+    ----------
+    heat_rate : float
+        The efficiency in btu fuel in/kwh electricity out.
+    gen : float
+        Total generation to produce in kwh.
+        
+    Returns
+    -------
+    float
+        Total fuel to generate gen energy with efficiency heat rate.
 
-# fuel_demand function to return the fuel demand of a plant with heat rate heat_rate and generation gen
-# heat_rate: float representing efficiency of the plant (heatrate) mmbtu_energy_in/mmbtu_elec_out
-# gen: float representing the generation demand (kwh)
-# kwh_mmbtu: float representing the unitless conversion (energy/energy) from kwh to mmbtu
-def fuel_demand(heat_rate, gen, kwh_mmbtu = 0.00341):
-    return gen*kwh_mmbtu*heat_rate
-
-# capital_cost function to return the capital costs of building a plant with capital costs of cap_cost and capacity cap
-# cap_cost: float representing capital cost in $/kw
-# cap: float representing the capacity of the plant in kw
-def capital_cost(cap_cost, cap):
-    return cap_cost*cap
+    """
+    return gen*heat_rate
 
 # =============================================================================
 # # annualize_cost function to return the annualized cost of a lump sum payment with discount rate discount_rate. 
@@ -40,13 +33,11 @@ def capital_cost(cap_cost, cap):
 #     return cost/annuity_factor
 # =============================================================================
 
-def interval_payment(capital, rate, lifetime, payments_per_year=1):
+def interval_payment(principle, rate, lifetime, payments_per_year=1):
     """
-    
-
     Parameters
     ----------
-    capital : float
+    principle : float
         The initial principle to payoff
     rate : float
         A value (usually ~5% or 0.05) that represents the interest rate charged to the principle annually
@@ -62,18 +53,21 @@ def interval_payment(capital, rate, lifetime, payments_per_year=1):
 
     """
     # TODO: Make checks that rate isn't 0 or payments per year isn't 0 as it breaks the code
-    numerator = rate*capital
+    numerator = rate*principle
     denominator = payments_per_year*(1-(1+rate/payments_per_year)**(-payments_per_year*lifetime))
     return numerator/denominator
 
-def remaining_cost(capital, age, rate, lifetime, payments_per_year=1):
+max_vec = numpy.vectorize(max)
+
+def remaining_capital(principle, age, rate, lifetime, payments_per_year=1):
     """
-    
+    Calculates the remaining capital on an initial investment of cost "principle"
+    after "age" years. 
 
     Parameters
     ----------
-    capital : float
-        The initial principle to payoff
+    principle : float
+        The initial capital to payoff
     age : float
         Current age of the plant (in years).
     rate : float
@@ -92,35 +86,56 @@ def remaining_cost(capital, age, rate, lifetime, payments_per_year=1):
     
     # TODO: Make unit tests that ensure that 0 payments means full capital remaining and full age means no capital remaining 
     # TODO: Error
-    payment = interval_payment(capital, rate, lifetime, payments_per_year)
+    payment = interval_payment(principle, rate, lifetime, payments_per_year)
     num_payments = age*payments_per_year
     equivalent_rate = rate/payments_per_year
     
     
-    lifetime_cost = capital*(1+equivalent_rate)**(num_payments)
+    lifetime_cost = principle*(1+equivalent_rate)**(num_payments)
     amount_paid = payment*((1+equivalent_rate)**(num_payments)-1)/(equivalent_rate)
-    remaining_val = max(lifetime_cost - amount_paid, 0)
+    # remaining_val = lifetime_cost - amount_paid
+    remaining_val = max_vec(lifetime_cost - amount_paid, 0.0)
     return remaining_val
 
 
-# total_cost function to return the total annual cost of running a plant 
-
-
-def total_cost(var_om, fix_om, fuel_price, capital_cost, discount_rate, lifetime, gen, cap, fuel_dem):
+def total_cost(var_om, fix_om, fuel_price, principle_cost, discount_rate, lifetime, gen, cap, fuel_dem):
     """[summary]
 
     Args:
-        var_om ([float])       : Variable cost of operations and maintanace $/Mwh
-        fix_om ([float])       : Fixed cost of operations and maintanance $/mw
-        fuel_price ([float])   : Cost of fuel input $/mmbtu of fuel
-        capital_cost ([float]) : Initial capital cost to build plant $/kw
-        discount_rate ([float]): Rate of discount for future income/costs (typically between 5% and 20%)
-        lifetime ([float])     : Lifetime for the pay off of capital
-        gen ([float])          : annual generation of electricity (mwh)
-        cap ([float])          : Capacity of plant (mw)
-        fuel_dem ([float])     : Demand of fuel (mmbtu)
+        var_om ([float])        : Variable cost of operations and maintanace $/Mwh
+        fix_om ([float])        : Fixed cost of operations and maintanance $/kw
+        fuel_price ([float])    : Cost of fuel input $/mmbtu of fuel
+        principle_cost ([float]): Initial capital cost to build plant $/kw
+        discount_rate ([float]) : Rate of discount for future income/costs (typically between 5% and 20%)
+        lifetime ([float])      : Lifetime for the pay off of capital
+        gen ([float])           : annual generation of electricity (kwh)
+        cap ([float])           : Capacity of plant (mw)
+        fuel_dem ([float])      : Demand of fuel (mmbtu)
 
     Returns:
         [float]: annualized total cost of generation, gen, capacity, cap, fuel demand, fuel_dem, discount rate, and lifetime. 
     """
-    return var_om_cost(var_om, gen)+fix_om_cost(fix_om, cap)+fuel_cost(fuel_price, fuel_dem)+interval_payment(capital_cost(capital_cost, cap), discount_rate, lifetime)
+    
+    # Function inputs expect different units than what was input here.
+    # update them with new units
+    
+    var_om_kwh        = var_om/constants.mw_kw
+    fix_om_mw         = fix_om*constants.mw_kw
+    fuel_price_btu    = fuel_price/constants.mmbtu_btu
+    principle_cost_mw = principle_cost*constants.mw_kw
+    
+ 
+    cost_var_om = var_om_kwh*gen
+    cost_fix_om = fix_om_mw*cap
+    cost_fuel   = fuel_price_btu*fuel_dem
+    cost_cap    = principle_cost_mw*cap
+    
+    cost_annual_cap = interval_payment(cost_cap, discount_rate, lifetime)
+    
+    return cost_var_om + cost_fix_om + cost_fuel + cost_annual_cap  
+
+total_cost_vec = numpy.vectorize(total_cost)
+
+
+
+
