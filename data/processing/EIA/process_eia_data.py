@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 
-def merge_names(EIA_gen_file, EIA_plant_file, EIA_fuel_map_file, OUTFILE):
+def merge_EIA(EIA_gen_file, EIA_plant_file, EIA_fuel_map_file, OUTFILE):
     cols = ["Plant Code", "Plant Name", "Generator ID", "Operating Year", "Prime Mover", "Nameplate Capacity (MW)", "Energy Source 1"]
     loc_cols = ["Plant Code", "State", "Latitude" ,"Longitude"]
 
@@ -44,5 +44,5 @@ if __name__ == "__main__":
     EIA_FUEL_FILE = os.path.join(DIR, "eia_fuel_mapping.csv" )
     OUT_FILE = os.path.join(DIR, str(2017), "EIA_mapping_loc.csv")
 
-    merge_names(EIA_FILE, EIA_LOC_FILE, EIA_FUEL_FILE, OUT_FILE)
+    merge_EIA(EIA_FILE, EIA_LOC_FILE, EIA_FUEL_FILE, OUT_FILE)
     

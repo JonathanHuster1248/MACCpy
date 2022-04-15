@@ -33,7 +33,7 @@ def read_data(DIR):
     
     DATA_DIR = os.path.join(DIR, "data", "processed")
     
-    plant_data_path            = os.path.join(DATA_DIR, "plant_data_loc.csv")
+    plant_data_path            = os.path.join(DATA_DIR, "plant_data.csv")
     cost_data_path             = os.path.join(DATA_DIR, "plantCost_NREL.csv")
     capacity_factors_data_path = os.path.join(DATA_DIR, "plantCapacityFactor_NREL.csv")
     age_data_path              = os.path.join(DATA_DIR, "plantAge.csv")

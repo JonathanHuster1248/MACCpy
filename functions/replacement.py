@@ -218,7 +218,35 @@ def replacement_iteration(var_om, fix_om, fuel_price, principle_cost, discount_r
     fuels = numpy.array(subset)[choices]
     
     return fuels, costs, em_red
+
+def replacement_df(df, cost_dict, cf_dict, emissions_dict, principle_cost, discount_rate, lifetime, measure_year = 2017, metric=0, subset = ["Gas", "Solar", "Wind"]):
+                   
+    fuels, costs, em_red = replacement_iteration(df["primary_fuel"].map(cost_dict["variable_om_per_mwh"]),
+                                                 df["primary_fuel"].map(cost_dict["fixed_om_per_kw_year"]),
+                                                 df["primary_fuel"].map(cost_dict["fuel_price_per_btu"]),
+                                                 principle_cost, # plant_data["primary_fuel"].map(cost_dict["capital_cost_per_kw"]),
+                                                 discount_rate,
+                                                 lifetime,
+                                                 df["generation"],
+                                                 df["capacity"],
+                                                 df["fuel_consumption"],
+                                                 measure_year-df["commissioning_year"],
+                                                 df["emissions"],
+                                                 cf_dict,
+                                                 cost_dict,
+                                                 emissions_dict,
+                                                 metric,
+                                                 subset)
+    return fuels, costs, em_red
+
+def set_macc(df, neg_cap = -200, cap = 200):
+    holder = df[df.metric.between(neg_cap, cap) & (df["em_red"] > 1)]
+    holder.sort_values("metric", inplace = True)
+    holder["cum_red"] = numpy.cumsum(holder["em_red"])/constants.giga
+    holder["cum_red_prev"] = (numpy.cumsum(holder["em_red"])-holder["em_red"])/constants.giga
+    holder["ori_rep"] = holder["primary_fuel"]+"_"+holder["rep_fuel"]
     
+    return holder
 
 def cost_per_emissions_abated(cost_orig, cost_new, emissions_orig, emissions_new):
     return (cost_new-cost_orig)/(emissions_orig-emissions_new)

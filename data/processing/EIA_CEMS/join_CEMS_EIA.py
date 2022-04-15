@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 
-def merge_names(CEMS_file, EIA_file, OUT_FILE):
+def join_CEMS_EIA(CEMS_file, EIA_file, OUT_FILE):
     cems_data = pd.read_csv(CEMS_file)
     eia_data = pd.read_csv(EIA_file)
 
@@ -15,7 +15,9 @@ def merge_names(CEMS_file, EIA_file, OUT_FILE):
     col_map = dict(zip(in_cols, out_cols))
     merged_data.rename(columns = col_map, inplace = True)
     
-    merged_data.to_csv(OUT_FILE, index=False, columns = out_cols)
+    with open(OUT_FILE, 'w') as f:
+        f.write("# Units: NA, NA, lat, lon, year, NA, NA, MW, kWh, mmbtu, metric tonne CO2\n")
+    merged_data.to_csv(OUT_FILE, index=False, columns = out_cols, mode = 'a')
 
     return merged_data
 
@@ -38,4 +40,4 @@ if __name__ == "__main__":
         OUT_DIR = create_path(os.path.join(DIR, "EIA_CEMS", str(year)))
         OUT_FILE = os.path.join(OUT_DIR, "joined_data.csv")
         
-        merge_names(CEMS_FILE, EIA_FILE, OUT_FILE)
+        join_CEMS_EIA(CEMS_FILE, EIA_FILE, OUT_FILE)
