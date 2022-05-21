@@ -3,6 +3,8 @@
 primary_fuel,co2_lb_per_mmbtu
 Coal,206
 Gas,117
+Gas_SC,117
+Gas_CC,117
 Oil,117
 Solar,0
 Wind,0

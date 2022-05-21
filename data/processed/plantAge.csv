@@ -2,6 +2,8 @@
 primary_fuel,pay_off_age,lifetime
 Coal,30,60
 Gas,30,60
+Gas_SC,30,60
+Gas_CC,30,60
 Oil,30,60
 Solar,30,60
 Wind,30,60

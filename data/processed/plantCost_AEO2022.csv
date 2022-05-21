@@ -1,0 +1,16 @@
+### This data is primarily pulled from the electricity market module documentation (table 3) at https://www.eia.gov/outlooks/aeo/assumptions/,,,,,,,
+### This data has values for both CT and CC gas plants and are separated by EIA data,,,,,,,
+### Values for fuel prices are pulled from the 2022 AEO for the 2021 year in $2021 (https://www.eia.gov/outlooks/aeo/data/browser/#/?id=3-AEO2022&cases=ref2022&sourcekey=0),,,,,,,
+primary_fuel,capital_cost_per_kw,fixed_om_per_kw_year,variable_om_per_mwh,heat_rate_btu_per_kwh,discount_rate,fuel_price_per_mmbtu,Notes
+Coal,4074,42.49,4.71,8638,0.06,2.06,USC
+Gas,1201,14.76,2.67,6431,0.06,5.15,CC single shaft
+Gas_CC,1201,14.76,2.67,6431,0.06,5.15,CC single shaft
+Gas_SC,785,7.33,4.71,9905,0.06,5.15,CT-industrial
+Oil,1294,17.06,4.92,9124,0.06,21.71,CT-Aeroderivative
+Solar,1327,15.97,0,3412,0.06,0,PV with tracking
+Wind,1718,27.57,0,3412,0.06,0,Wind
+Hydro,3083,43.78,1.46,3412,0.06,0,conventional hydropower
+Geothermal,3076,143.22,1.21,3412,0.06,0,geothermal
+CSP,7895,89.39,3.5,3412,0.06,0,Solar Thermal
+Nuclear,6695,127.35,2.48,10443,0.06,0,Nulear-LWR
+Biomass,4524,131.62,5.06,13500,0.06,0,Biomass

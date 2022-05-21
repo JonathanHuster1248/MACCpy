@@ -121,15 +121,15 @@ def total_cost(var_om, fix_om, fuel_price, principle_cost, discount_rate, lifeti
     
     var_om_kwh        = var_om/constants.mw_kw
     fix_om_mw         = fix_om*constants.mw_kw
-    fuel_price_btu    = fuel_price/constants.mmbtu_btu
+    # fuel_price_btu    = fuel_price/constants.mmbtu_btu
     principle_cost_mw = principle_cost*constants.mw_kw
     
  
     cost_var_om = var_om_kwh*gen
     cost_fix_om = fix_om_mw*cap
-    cost_fuel   = fuel_price_btu*fuel_dem
+    cost_fuel   = fuel_price*fuel_dem
     cost_cap    = principle_cost_mw*cap
-    
+        
     cost_annual_cap = interval_payment(cost_cap, discount_rate, lifetime)
     
     return cost_var_om + cost_fix_om + cost_fuel + cost_annual_cap  

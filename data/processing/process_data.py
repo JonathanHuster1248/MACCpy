@@ -28,14 +28,14 @@ if __name__ == '__main__':
     OUT_FILE = os.path.join(DIR,"..", "processed", "plant_data.csv")
     
     
-    start_year = 2017
-    end_year = 2017
+    start_year = 2020
+    end_year = 2020
     
     for year in range(start_year, end_year+1):
         # Process EIA
         EIA_RAW_FILE = os.path.join(EIA_DIR, "..", "..", "raw", "EIA", str(year), "3_1_Generator_Y2017.xlsx" )
         EIA_LOC_FILE = os.path.join(EIA_DIR, "..", "..", "raw", "EIA", str(year), "2___Plant_Y2017.xlsx" )
-        EIA_FUEL_FILE = os.path.join(EIA_DIR, "eia_fuel_mapping.csv" )
+        EIA_FUEL_FILE = os.path.join(EIA_DIR, "eia_tech_mapping.csv" )
         EIA_CLEAN_FILE = os.path.join(EIA_DIR, str(year), "EIA_mapping.csv")
         
         process_eia_data.merge_EIA(EIA_RAW_FILE, EIA_LOC_FILE, EIA_FUEL_FILE, EIA_CLEAN_FILE)    

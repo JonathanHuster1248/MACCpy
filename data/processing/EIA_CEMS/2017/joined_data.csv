@@ -1,3 +1,4 @@
+# Units: NA, NA, lat, lon, year, NA, NA, MW, kWh, mmbtu, metric tonne CO2
 name,state,lat,lon,commissioning_year,prime_mover,primary_fuel,capacity,generation,fuel_consumption,emissions
 Barry,AL,31.0069,-88.0103,1954,ST,Coal,2839,12296272000.0,96915175.7,7341728.3
 Gadsden,AL,34.0128,-85.9708,1949,ST,Gas,138,0.0,3266577.975,193727.525

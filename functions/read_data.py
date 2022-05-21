@@ -34,7 +34,7 @@ def read_data(DIR):
     DATA_DIR = os.path.join(DIR, "data", "processed")
     
     plant_data_path            = os.path.join(DATA_DIR, "plant_data.csv")
-    cost_data_path             = os.path.join(DATA_DIR, "plantCost_NREL.csv")
+    cost_data_path             = os.path.join(DATA_DIR, "plantCost_AEO2022.csv")
     capacity_factors_data_path = os.path.join(DATA_DIR, "plantCapacityFactor_NREL.csv")
     age_data_path              = os.path.join(DATA_DIR, "plantAge.csv")
     emissions_data_path        = os.path.join(DATA_DIR, "plantEmissions.csv")
@@ -52,7 +52,7 @@ def read_data(DIR):
     
     return plant_data, cost_data, cf_data, age_data, emissions_data, pv_cf_data, wind_cf_data
 
-def clean_plant_data(df, fuel_subset = ["Coal", "Gas", "Oil"]):
+def clean_plant_data(df, fuel_subset = constants.default_fossil):
     
     # We'll remove data that has 
     # 1) Missing values in any column
@@ -67,7 +67,7 @@ def clean_plant_data(df, fuel_subset = ["Coal", "Gas", "Oil"]):
     positive_emissions = df_full['emissions'] > 0
     positive_capacity = df_full['capacity'] > 0
     feasible_cf = (df_full['generation']/(df_full['capacity']*constants.mw_kw*constants.year_hours)).between(constants.min_cf, constants.max_cf)
-    in_fuel = df_full.primary_fuel.isin(["Gas", "Coal", "Oil"])
+    in_fuel = df_full.primary_fuel.isin(fuel_subset)
 
     tests_array = np.array([positive_generation, 
                             positive_consumption, 

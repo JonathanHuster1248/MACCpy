@@ -37,12 +37,22 @@ US_CONTINENTAL_ABB = {"AL","AZ","AR","CA","CO","CT","DE","DC","FL","GA","ID","IL
 min_cf = 0
 max_cf = 1.05 
 
+# Default Fossil fuels
+default_fossil = ["Coal", "Gas", "Gas_SC", "Gas_CC", "Oil"]
+
+# Default Replacements
+default_replacement = ["Gas", "Wind","Solar"]
+
 # Plotting 
 colors = {"Coal_Gas":"#f8766d", 
           "Coal_Solar":"#CD9600",
           "Coal_Wind": "#7CAE00",
-          "Gas_Gas":  "#00BE67", 
-          "Gas_Solar":"#00BFC4",
-          "Gas_Wind":"#00A9FF",
+          "Gas_SC_Gas":  "#00BE67", 
+          "Gas_CC_Gas":  "#00BE67", 
+          "Gas_SC_Solar":"#00BFC4",
+          "Gas_CC_Solar":"#00BFC4",
+          "Gas_SC_Wind":"#00A9FF",
+          "Gas_CC_Wind":"#00A9FF",
           "Oil_Gas":"#C77CFF",
-          "Oil_Wind":"#FF61CC"}
+          "Oil_Wind":"#FF61CC",
+         "National":"#a6a6a6"}

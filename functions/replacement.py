@@ -68,7 +68,7 @@ def direct_replacement_cost(gen, cf, heatrate, var_om, fix_om, fuel_price, princ
     """
     cap = size_capacity(gen, cf)/constants.mw_kw
     fuel = heatrate*gen/constants.mmbtu_btu
-    
+        
     return cost.total_cost(var_om, fix_om, fuel_price, principle_cost, discount_rate, lifetime, gen, cap, fuel)
 
 def total_replacement_cost(gen, cf, heatrate, var_om, fix_om, fuel_price, principle_cost, discount_rate, lifetime,
@@ -190,7 +190,7 @@ def replacement_iteration(var_om, fix_om, fuel_price, principle_cost, discount_r
                                cost_dict["heat_rate_btu_per_kwh"][fuel],
                                cost_dict["variable_om_per_mwh"][fuel],
                                cost_dict["fixed_om_per_kw_year"][fuel],
-                               cost_dict["fuel_price_per_btu"][fuel],
+                               cost_dict["fuel_price_per_mmbtu"][fuel],
                                cost_dict["capital_cost_per_kw"][fuel],
                                discount_rate,
                                lifetime,
@@ -220,10 +220,10 @@ def replacement_iteration(var_om, fix_om, fuel_price, principle_cost, discount_r
     return fuels, costs, em_red
 
 def replacement_df(df, cost_dict, cf_dict, emissions_dict, principle_cost, discount_rate, lifetime, measure_year = 2017, metric=0, subset = ["Gas", "Solar", "Wind"]):
-                   
+    
     fuels, costs, em_red = replacement_iteration(df["primary_fuel"].map(cost_dict["variable_om_per_mwh"]),
                                                  df["primary_fuel"].map(cost_dict["fixed_om_per_kw_year"]),
-                                                 df["primary_fuel"].map(cost_dict["fuel_price_per_btu"]),
+                                                 df["primary_fuel"].map(cost_dict["fuel_price_per_mmbtu"]),
                                                  principle_cost, # plant_data["primary_fuel"].map(cost_dict["capital_cost_per_kw"]),
                                                  discount_rate,
                                                  lifetime,
