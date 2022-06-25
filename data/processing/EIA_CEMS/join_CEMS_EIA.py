@@ -8,6 +8,7 @@ def join_CEMS_EIA(CEMS_file, EIA_file, OUT_FILE):
 
     merged_data = cems_data.merge(eia_data, how="inner", left_on="ORISPL_CODE", right_on="Plant Code")
 
+    # Convert units and rename columns
     merged_data["GLOAD (kWh)"]= merged_data["GLOAD (MW)"]*1000
     out_cols = ["name", "state", "lat", "lon", "commissioning_year", "primary_fuel", "capacity", "generation", "fuel_consumption", "emissions"]
     in_cols = ["Plant Name","State","Latitude","Longitude","Operating Year", "primary_fuel","Nameplate Capacity (MW)","GLOAD (kWh)"	,"HEAT_INPUT (mmBtu)"	,"CO2_MASS (tons)"]
@@ -15,8 +16,6 @@ def join_CEMS_EIA(CEMS_file, EIA_file, OUT_FILE):
     col_map = dict(zip(in_cols, out_cols))
     merged_data.rename(columns = col_map, inplace = True)
 
-    # merged_data.loc[merged_data["primary_fuel"] == "Gas", "primary_fuel"] =merged_data.loc[merged_data["primary_fuel"] == "Gas", "primary_fuel"]+"_"+merged_data.loc[merged_data["primary_fuel"] == "Gas", "prime_mover"]
-    
     with open(OUT_FILE, 'w') as f:
         f.write("# Units: NA, NA, lat, lon, year, NA, NA, MW, kWh, mmbtu, metric tonne CO2\n")
     merged_data.to_csv(OUT_FILE, index=False, columns = out_cols, mode = 'a')

@@ -46,20 +46,20 @@ def estimate_emissions(generation, heatrate, carbon_content):
     """
     return generation*heatrate*carbon_content
 
-def direct_replacement_cost(gen, cf, heatrate, var_om, fix_om, fuel_price, principle_cost, discount_rate, lifetime):
+def direct_replacement_cost(gen, cf, heatrate, var_om, fix_om, fuel_price, principle_cost, stor_cost, discount_rate, lifetime):
     """
-    Estimates the cost of replacing "gen" generation with a new technology with 
-    capacity factor "cf" and costs of technologies and lifetimes given in following 
-    parameters. 
+    Estimates the direct cost of replacing "gen" generation with a new power plant. 
+    Capacity factors, costs, and lifetimes must be parameter inputs. 
 
     Args:
         gen ([float])           : annual generation of electricity (kwh)
         cf  ([float])           : Capacity factor of replacement plant (NA)
         heatrate([float])       : Heatrate of the replacement (btu/kwh)
-        var_om ([float])        : Variable cost of operations and maintanace $/Mwh
-        fix_om ([float])        : Fixed cost of operations and maintanance $/kw
-        fuel_price ([float])    : Cost of fuel input $/mmbtu of fuel
-        principle_cost ([float]): Initial capital cost to build plant $/kw
+        var_om ([float])        : Variable cost of operations and maintanace ($/Mwh)
+        fix_om ([float])        : Fixed cost of operations and maintanance ($/kw)
+        fuel_price ([float])    : Cost of fuel input ($/mmbtu) of fuel
+        principle_cost ([float]): Initial capital cost to build plant ($/kw)
+        stor_cost ([float])     : Initial capital cost to build storage ($/kw_generation)
         discount_rate ([float]) : Rate of discount for future income/costs (typically between 5% and 20%)
         lifetime ([float])      : Lifetime for the pay off of capital
         
@@ -69,12 +69,13 @@ def direct_replacement_cost(gen, cf, heatrate, var_om, fix_om, fuel_price, princ
     cap = size_capacity(gen, cf)/constants.mw_kw
     fuel = heatrate*gen/constants.mmbtu_btu
         
-    return cost.total_cost(var_om, fix_om, fuel_price, principle_cost, discount_rate, lifetime, gen, cap, fuel)
-
-def total_replacement_cost(gen, cf, heatrate, var_om, fix_om, fuel_price, principle_cost, discount_rate, lifetime,
+    return cost.total_cost(var_om, fix_om, fuel_price, principle_cost, stor_cost, discount_rate, lifetime, gen, cap, fuel)
+                
+def total_replacement_cost(gen, cf, heatrate, var_om, fix_om, fuel_price, principle_cost, stor_cost, discount_rate, lifetime,
                            o_principle, age, o_rate, o_lifeimte, o_ppy=1):
     """
-    Calculate the total cost of replacement (both new capital and remaining historical capital)
+    Calculate the total cost of replacing an existing powerplant with a new plant
+    considering both new capital and remaining historical capital.
 
     Parameters
     ----------
@@ -85,13 +86,15 @@ def total_replacement_cost(gen, cf, heatrate, var_om, fix_om, fuel_price, princi
     heatrate : float
         Heatrate of the replacement (btu/kwh).
     var_om : float
-        Variable cost of operations and maintanace $/Mwh.
+        Variable cost of operations and maintanace ($/Mwh).
     fix_om : float
-        Fixed cost of operations and maintanance $/kw.
+        Fixed cost of operations and maintanance ($/kw).
     fuel_price : float
-        Cost of fuel input $/mmbtu of fuel.
+        Cost of fuel input ($/mmbtu) of fuel.
     principle_cost : float
-        Initial capital cost to build plant $/kw.
+        Initial capital cost to build plant ($/kw).
+    stor_cost : float
+        Initial capital cost to build storage for plant ($/kw_generation).
     discount_rate : float
         Rate of discount for future income/costs (typically between 5% and 20%).
     lifetime : float
@@ -117,14 +120,14 @@ def total_replacement_cost(gen, cf, heatrate, var_om, fix_om, fuel_price, princi
     
     
     
-    direct_cost = direct_replacement_cost(gen, cf, heatrate, var_om, fix_om, fuel_price, principle_cost, discount_rate, lifetime)
+    direct_cost = direct_replacement_cost(gen, cf, heatrate, var_om, fix_om, fuel_price, principle_cost, stor_cost, discount_rate, lifetime)
     
     leftover = cost.remaining_capital(o_principle, age, o_rate, o_lifeimte, o_ppy)
     payoff_cost = cost.interval_payment(leftover, discount_rate, lifetime)
 
     return direct_cost+payoff_cost
 
-def replacement_iteration(var_om, fix_om, fuel_price, principle_cost, discount_rate, lifetime, gen, cap, fuel_dem, age, emissions,
+def replacement_iteration(var_om, fix_om, fuel_price, principle_cost, stor_cost, discount_rate, lifetime, gen, cap, fuel_dem, age, emissions,
                           cf_dict, cost_dict, emissions_dict, metric=0, subset = ["Gas", "Solar", "Wind"]):
     """
     
@@ -132,13 +135,15 @@ def replacement_iteration(var_om, fix_om, fuel_price, principle_cost, discount_r
     Parameters
     ----------
     var_om : float
-        Variable cost of operations and maintanace $/Mwh.
+        Variable cost of operations and maintanace ($/Mwh).
     fix_om : float
-        Fixed cost of operations and maintanance $/kw.
+        Fixed cost of operations and maintanance ($/kw).
     fuel_price : float
-        Cost of fuel input $/mmbtu of fuel.
+        Cost of fuel input ($/mmbtu) of fuel.
     principle_cost : float
-        Initial capital cost to build plant $/kw.
+        Initial capital cost to build plant ($/kw).
+    stor_cost : float
+        Initial capital cost to build storage ($/kw_generation).
     discount_rate : float
         Rate of discount for future income/costs (typically between 5% and 20%).
     lifetime : float
@@ -160,7 +165,7 @@ def replacement_iteration(var_om, fix_om, fuel_price, principle_cost, discount_r
     emissions_dict : dictionary
         Dictionary of emissions rates by fuel (tonnes/MWh).
     metric : int, optional
-        Which metric to judge by 0: cost, 1: Cost/emissions, 2: emissions. The default is 0.
+        Which metric to judge by 0: cost, 1: Cost/emissions, 2: emissions, 3: Fuel and OM costs, 4: new costs. The default is 0.
     subset : list(str), optional
         The subset of options that can replace your plant. The default is ["Gas", "Solar", "Wind"].
         
@@ -182,9 +187,11 @@ def replacement_iteration(var_om, fix_om, fuel_price, principle_cost, discount_r
                3:dict(zip(subset, [None]*len(subset))), # FOM costs
                4:dict(zip(subset, [None]*len(subset)))} # New Costs
     
+    # For each potential fuel replacement calculate the remaining cost, total new cost, and new emissions, 
+    # Then make a decision based on the specified metric
+
     for fuel in subset:
-        # Now do each metric 
-        existing_cost = cost.total_cost(var_om, fix_om, fuel_price, principle_cost, discount_rate, lifetime, gen, cap, fuel_dem) # we can put cap in if we want to annualize the remaining capital over a new lifetime, but we'll put 0 here. 
+        existing_cost = cost.total_cost(var_om, fix_om, fuel_price, principle_cost, stor_cost, discount_rate, lifetime, gen, cap, fuel_dem) # we can put cap in if we want to annualize the remaining capital over a new lifetime, but we'll put 0 here. 
         replacement_cost = total_replacement_cost(gen,
                                cf_dict[fuel],
                                cost_dict["heat_rate_btu_per_kwh"][fuel],
@@ -192,6 +199,7 @@ def replacement_iteration(var_om, fix_om, fuel_price, principle_cost, discount_r
                                cost_dict["fixed_om_per_kw_year"][fuel],
                                cost_dict["fuel_price_per_mmbtu"][fuel],
                                cost_dict["capital_cost_per_kw"][fuel],
+                               cost_dict["storage_per_kw"][fuel],
                                discount_rate,
                                lifetime,
                                cost_dict["capital_cost_per_kw"][fuel]*constants.mw_kw*cap,
@@ -211,6 +219,10 @@ def replacement_iteration(var_om, fix_om, fuel_price, principle_cost, discount_r
     
     emissions_red = numpy.array(list(metrics[2].values()))
     
+    # Pull the array of choices, depending on which evaluation metric is chosen, then 
+    # select the replacement choice for each plant that minimizes the metric. 
+    # return the fuel choices, the costs, and emissions reductions associated with those choices. 
+
     options = numpy.array(list(metrics[metric].values()))
     choices = numpy.argmin(options, axis = 0)
     costs = options[choices, numpy.arange(options.shape[1])]# numpy.amin(options, axis = 0)
@@ -219,12 +231,48 @@ def replacement_iteration(var_om, fix_om, fuel_price, principle_cost, discount_r
     
     return fuels, costs, em_red
 
-def replacement_df(df, cost_dict, cf_dict, emissions_dict, principle_cost, discount_rate, lifetime, measure_year = 2017, metric=0, subset = ["Gas", "Solar", "Wind"]):
-    
+def replacement_df(df, cost_dict, cf_dict, emissions_dict, principle_cost, discount_rate, lifetime, measure_year = 2021, metric=0, subset = ["Gas", "Solar", "Wind"]):
+    """
+    A wrapper function that allows us to feed in only a dataframe, key dictionaries, and key parameters rather
+    than individual costs and parameters when calculating the cost of replacement. 
+
+    Args:
+        df (pandas df): 
+            Plant level data on generation, emissions, and fuel usage
+        cost_dict (dict): 
+            A dictionary of costs by fuel and source (eg fuel, OM, capital, etc). prices in $/kw, $/kwh, and $/mmbtu
+        cf_dict (dict): 
+            A dictionary of capacity factors by fuel. For wind and solar, cfs may be a list 
+            sorted to match the order of plants in df
+        emissions_dict (dict): 
+            A dictionary of emissions by fuel in tonneCO2/mmbtu fuel
+        principle_cost (float): 
+            Amount of principle that existing plants need to pay to originally construct. By default, 0.
+        discount_rate (float): 
+            A percent discount rate for actors making this switch
+        lifetime (float): 
+            A payoff lifetime of plants both existing and newly constructed (years)
+        measure_year (int, optional): 
+            The year these decisions will be made in. Defaults to 2021.
+        metric (int, optional): 
+            Which decision metric to base our decions off of. Defaults to 0.
+        subset (list, optional): 
+            Which subset of fuel replacements we consider to be possible. Defaults to ["Gas", "Solar", "Wind"].
+
+    Returns:
+        fuels : 
+            A list of selected fuels, ordered to match the order of plants in df
+        costs : 
+            A list of the costs associated with the fuel selection, ordered to match the order of plants in df
+        em_red : 
+            A list of emissions reductions, ordered to match the order of plants in df
+        
+    """
     fuels, costs, em_red = replacement_iteration(df["primary_fuel"].map(cost_dict["variable_om_per_mwh"]),
                                                  df["primary_fuel"].map(cost_dict["fixed_om_per_kw_year"]),
                                                  df["primary_fuel"].map(cost_dict["fuel_price_per_mmbtu"]),
                                                  principle_cost, # plant_data["primary_fuel"].map(cost_dict["capital_cost_per_kw"]),
+                                                 df["primary_fuel"].map(cost_dict["storage_per_kw"]),
                                                  discount_rate,
                                                  lifetime,
                                                  df["generation"],
@@ -240,6 +288,23 @@ def replacement_df(df, cost_dict, cf_dict, emissions_dict, principle_cost, disco
     return fuels, costs, em_red
 
 def set_macc(df, neg_cap = -200, cap = 200):
+    """
+    This function orders a df of replacement decisions by the cost effectiveness of each decision. 
+    Then calcualtes the cumulative impacts of these ordered decisions
+
+    Args:
+        df (pandas df): 
+            A dataframe of plant operations and replacements with associated costs and emissions reductions
+        neg_cap (int, optional): 
+            How low should the metric be considered to. Defaults to -200.
+        cap (int, optional): 
+            How high should the metric be considered to. Defaults to 200.
+
+    Returns:
+        pandas df : 
+            An ordered and filtered version of the df that was fed in, but with additional columns 
+            with cumulative impacts
+    """
     holder = df[df.metric.between(neg_cap, cap) & (df["em_red"] > 1)]
     holder.sort_values("metric", inplace = True)
     holder["cum_red"] = numpy.cumsum(holder["em_red"])/constants.giga
@@ -249,9 +314,39 @@ def set_macc(df, neg_cap = -200, cap = 200):
     return holder
 
 def cost_per_emissions_abated(cost_orig, cost_new, emissions_orig, emissions_new):
+    """
+    Calculate the unit cost per unit emissions abated for a decision
+
+    Args:
+        cost_orig (float): 
+            The cost of maintaining the original plant $
+        cost_new (float): 
+            The cost of building and maintaining a new plant $
+        emissions_orig (float): 
+            The emissions from the original plant given historical operation
+        emissions_new (float): 
+            Estimated emissions from a replacement plant given a replacement plan
+
+    Returns:
+        float: unit cost per unit emissions abated.
+    """
     return (cost_new-cost_orig)/(emissions_orig-emissions_new)
 
 def select_cf(loc, data_loc, cf):
+    """
+    Choosing the closest point from a set of sampled points to find the closest sampled capacity factor for wind and solar
+
+    Args:
+        loc (2-d numpy array): 
+            A 2-d array of lat/lon pairs of points that we want to find the CFs for 
+        data_loc (2-d numpy array): 
+            A 2-d array of lat/lon pairs of sampled locations that we can pick from 
+        cf (1-d numpy array): 
+            An array of capacity factors associated with the data_locs
+
+    Returns:
+        numpy 1-d array : The capacity factors of the points closest to loc locations given a set of data data_loc 
+    """
 
     dist_array = distance.cdist(loc, data_loc)
     best_locs = numpy.argmin(dist_array, axis = 1) # the algorithm for best loc could be expanded to include other parameters as well. 

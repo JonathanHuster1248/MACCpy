@@ -98,14 +98,16 @@ def remaining_capital(principle, age, rate, lifetime, payments_per_year=1):
     return remaining_val
 
 
-def total_cost(var_om, fix_om, fuel_price, principle_cost, discount_rate, lifetime, gen, cap, fuel_dem):
-    """[summary]
+def total_cost(var_om, fix_om, fuel_price, principle_cost, stor_cost, discount_rate, lifetime, gen, cap, fuel_dem):
+    """
+    Calculate the total cost of building a new plant annualized to annual payments
 
     Args:
         var_om ([float])        : Variable cost of operations and maintanace $/Mwh
         fix_om ([float])        : Fixed cost of operations and maintanance $/kw
         fuel_price ([float])    : Cost of fuel input $/mmbtu of fuel
         principle_cost ([float]): Initial capital cost to build plant $/kw
+        stor_cost ([float])     : Initial capital cost to build storage $/kw_generation
         discount_rate ([float]) : Rate of discount for future income/costs (typically between 5% and 20%)
         lifetime ([float])      : Lifetime for the pay off of capital
         gen ([float])           : annual generation of electricity (kwh)
@@ -122,7 +124,7 @@ def total_cost(var_om, fix_om, fuel_price, principle_cost, discount_rate, lifeti
     var_om_kwh        = var_om/constants.mw_kw
     fix_om_mw         = fix_om*constants.mw_kw
     # fuel_price_btu    = fuel_price/constants.mmbtu_btu
-    principle_cost_mw = principle_cost*constants.mw_kw
+    principle_cost_mw = (principle_cost+stor_cost)*constants.mw_kw
     
  
     cost_var_om = var_om_kwh*gen
